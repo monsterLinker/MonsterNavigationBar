@@ -1,12 +1,12 @@
 import UIKit
 import MonsterNavigationBar
 
-/// The main playground mirrors the controls from the upstream Objective-C demo.
+/// 主页面集中展示导航栏的各项样式和转场控制。
 final class DemoViewController: UIViewController {
     private let shadowHiddenSwitch = UISwitch()
     private let barHiddenSwitch = UISwitch()
     private let blackStyleSwitch = UISwitch()
-    private let colorSegment = UISegmentedControl(items: ["White", "Black", "Red", "Green", "Blue"])
+    private let colorSegment = UISegmentedControl(items: ["白色", "黑色", "红色", "绿色", "蓝色"])
     private let alphaSlider = UISlider()
     private let alphaComponent = UILabel()
     private let imageSwitch = UISwitch()
@@ -50,7 +50,7 @@ final class DemoViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = navigationController?.viewControllers.count == 1 ? "Monster Navigation Bar" : "Demo \(navigationController?.viewControllers.count ?? 0)"
+        title = navigationController?.viewControllers.count == 1 ? "导航栏演示" : "演示 \(navigationController?.viewControllers.count ?? 0)"
         view.backgroundColor = .systemGroupedBackground
         applyConfiguredNavigationBar()
         configureNavigationItem()
@@ -72,7 +72,7 @@ final class DemoViewController: UIViewController {
     private func configureNavigationItem() {
         if navigationController?.viewControllers.count == 1 {
             navigationItem.rightBarButtonItem = UIBarButtonItem(
-                title: "Next",
+                title: "下一页",
                 style: .plain,
                 target: self,
                 action: #selector(pushToNext)
@@ -92,32 +92,32 @@ final class DemoViewController: UIViewController {
         scrollView.addSubview(stack)
 
         let heading = UILabel()
-        heading.text = "Navigation bar transitions"
+        heading.text = "导航栏转场"
         heading.font = .preferredFont(forTextStyle: .title2)
         heading.textColor = .label
         stack.addArrangedSubview(heading)
 
         let description = UILabel()
-        description.text = "这些控件对应上游 Demo 的样式和转场测试。设置后 push 或滚动页面观察导航栏变化。"
+        description.text = "这些控件用于测试导航栏样式和转场效果。设置后点击按钮或滚动页面观察导航栏变化。"
         description.font = .preferredFont(forTextStyle: .subheadline)
         description.textColor = .secondaryLabel
         description.numberOfLines = 0
         stack.addArrangedSubview(description)
 
-        stack.addArrangedSubview(makeButton(title: "Push To Next", color: .systemBlue, action: #selector(pushToNext)))
-        stack.addArrangedSubview(makeButton(title: "Dynamic Gradient", color: .systemOrange, action: #selector(pushDynamicGradient)))
-        stack.addArrangedSubview(makeButton(title: "Present Gradient", color: .systemGreen, action: #selector(presentGradient)))
-        stack.addArrangedSubview(makeButton(title: "Dismiss", color: .systemGreen, action: #selector(dismissPresented)))
-        stack.addArrangedSubview(makeButton(title: "Stack Operations", color: .systemPurple, action: #selector(pushStackOperations)))
+        stack.addArrangedSubview(makeButton(title: "进入下一页", color: .systemBlue, action: #selector(pushToNext)))
+        stack.addArrangedSubview(makeButton(title: "动态渐变", color: .systemOrange, action: #selector(pushDynamicGradient)))
+        stack.addArrangedSubview(makeButton(title: "模态渐变", color: .systemGreen, action: #selector(presentGradient)))
+        stack.addArrangedSubview(makeButton(title: "关闭页面", color: .systemGreen, action: #selector(dismissPresented)))
+        stack.addArrangedSubview(makeButton(title: "导航栈操作", color: .systemPurple, action: #selector(pushStackOperations)))
 
-        stack.addArrangedSubview(makeSwitchRow(title: "Shadow Hidden", control: shadowHiddenSwitch, action: #selector(shadowHiddenChanged)))
-        stack.addArrangedSubview(makeSwitchRow(title: "Bar Hidden", control: barHiddenSwitch, action: #selector(barHiddenChanged)))
-        stack.addArrangedSubview(makeSwitchRow(title: "Black Bar Style", control: blackStyleSwitch, action: #selector(blackStyleChanged)))
-        stack.addArrangedSubview(makeSwitchRow(title: "Image Background", control: imageSwitch, action: #selector(imageChanged)))
-        stack.addArrangedSubview(makeSwitchRow(title: "Swipe Back Enabled", control: swipeBackSwitch, action: #selector(swipeBackChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "隐藏阴影", control: shadowHiddenSwitch, action: #selector(shadowHiddenChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "隐藏导航栏", control: barHiddenSwitch, action: #selector(barHiddenChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "黑色导航栏样式", control: blackStyleSwitch, action: #selector(blackStyleChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "图片背景", control: imageSwitch, action: #selector(imageChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "开启侧滑返回", control: swipeBackSwitch, action: #selector(swipeBackChanged)))
 
         let colorLabel = UILabel()
-        colorLabel.text = "Bar Tint Color"
+        colorLabel.text = "导航栏颜色"
         colorLabel.font = .preferredFont(forTextStyle: .body)
         stack.addArrangedSubview(colorLabel)
         colorSegment.selectedSegmentIndex = 0
@@ -129,7 +129,7 @@ final class DemoViewController: UIViewController {
         alphaRow.alignment = .center
         alphaRow.spacing = 10
         let alphaLabel = UILabel()
-        alphaLabel.text = "Bar Alpha"
+        alphaLabel.text = "导航栏透明度"
         alphaLabel.font = .preferredFont(forTextStyle: .body)
         alphaSlider.minimumValue = 0
         alphaSlider.maximumValue = 1
@@ -142,7 +142,7 @@ final class DemoViewController: UIViewController {
         stack.addArrangedSubview(alphaRow)
 
         let statusTitle = UILabel()
-        statusTitle.text = "Current values"
+        statusTitle.text = "当前配置"
         statusTitle.font = .preferredFont(forTextStyle: .headline)
         stack.addArrangedSubview(statusTitle)
         statusLabel.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
@@ -171,12 +171,12 @@ final class DemoViewController: UIViewController {
         swipeBackSwitch.isOn = monsterSwipeBackEnabled
         alphaSlider.value = Float(monsterBarAlpha)
         alphaComponent.text = String(format: "%.2f", monsterBarAlpha)
-        statusLabel.text = "style: \(monsterBarStyle == .black ? "black" : "default")\n" +
-            "alpha: \(String(format: "%.2f", monsterBarAlpha))\n" +
-            "bar hidden: \(monsterBarHidden)\n" +
-            "shadow hidden: \(monsterBarShadowHidden)\n" +
-            "image: \(monsterBarImage != nil)\n" +
-            "swipe back: \(monsterSwipeBackEnabled)"
+        statusLabel.text = "样式：\(monsterBarStyle == .black ? "黑色" : "默认")\n" +
+            "透明度：\(String(format: "%.2f", monsterBarAlpha))\n" +
+            "导航栏隐藏：\(monsterBarHidden ? "是" : "否")\n" +
+            "阴影隐藏：\(monsterBarShadowHidden ? "是" : "否")\n" +
+            "图片背景：\(monsterBarImage != nil ? "是" : "否")\n" +
+            "侧滑返回：\(monsterSwipeBackEnabled ? "开启" : "关闭")"
     }
 
     private func makeButton(title: String, color: UIColor, action: Selector) -> UIButton {
@@ -280,12 +280,12 @@ final class DemoViewController: UIViewController {
     }
 }
 
-/// Exercises changing every per-controller value while a push/pop is running.
+/// 演示 push/pop 过程中逐项改变页面导航栏配置。
 final class DetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Contrasting page"
+        title = "对比页面"
         view.backgroundColor = .systemBackground
         monsterBarTintColor = UIColor.systemPink.withAlphaComponent(0.88)
         monsterTintColor = .white
@@ -307,12 +307,12 @@ final class DetailViewController: UIViewController {
         stack.addArrangedSubview(label)
 
         let popButton = UIButton(type: .system)
-        popButton.setTitle("Pop To Root", for: .normal)
+        popButton.setTitle("返回根页面", for: .normal)
         popButton.addTarget(self, action: #selector(popToRoot), for: .touchUpInside)
         stack.addArrangedSubview(popButton)
 
         let redirectButton = UIButton(type: .system)
-        redirectButton.setTitle("Redirect This Stack", for: .normal)
+        redirectButton.setTitle("重定向导航栈", for: .normal)
         redirectButton.addTarget(self, action: #selector(redirectStack), for: .touchUpInside)
         stack.addArrangedSubview(redirectButton)
 
@@ -332,7 +332,7 @@ final class DetailViewController: UIViewController {
     }
 }
 
-/// Matches the upstream dynamic-gradient table demo without requiring a bundled image.
+/// 演示动态渐变导航栏，无需额外打包图片资源。
 final class GradientDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let headerView = UIImageView(image: GradientDemoViewController.makeHeaderImage())
@@ -346,7 +346,7 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Dynamic Gradient Bar"
+        title = "动态渐变导航栏"
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.dataSource = self
         tableView.delegate = self
@@ -362,7 +362,7 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
         monsterTintColor = .white
         monsterTitleTextAttributes = [.foregroundColor: UIColor.white.withAlphaComponent(0)]
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Close",
+            title: "关闭",
             style: .plain,
             target: self,
             action: #selector(close)
@@ -413,7 +413,7 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-        cell.textLabel?.text = "click me"
+        cell.textLabel?.text = "点击查看"
         cell.accessoryType = .disclosureIndicator
         return cell
     }

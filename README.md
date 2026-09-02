@@ -1,6 +1,6 @@
 # MonsterNavigationBar (Swift)
 
-这是 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar) 的 Swift/UIKit 移植版，项目命名和公开 API。它解决的是导航控制器切换页面时导航栏状态突变的问题：背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色都能在 push、pop 及交互式返回期间平滑过渡。
+这是 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar) 的 Swift/UIKit 移植版，项目命名和公开 API 已按 `monstertulin` GitHub 账号统一为 `MonsterNavigationBar`。它解决的是导航控制器切换页面时导航栏状态突变的问题：背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色都能在 push、pop 及交互式返回期间平滑过渡。
 
 ## 安装
 
