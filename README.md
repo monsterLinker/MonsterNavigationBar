@@ -2,7 +2,7 @@
 
 一个基于 Swift/UIKit 的导航栏平滑转场组件，适用于 iOS 12 及以上系统。
 
-本项目移植自 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar)，并根据 `monstertulin` GitHub 账号统一为 `MonsterNavigationBar` 命名。它解决了导航控制器在 push、pop 和交互式返回时导航栏状态突变的问题，让背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色连续过渡。
+本项目移植自 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar)，。它解决了导航控制器在 push、pop 和交互式返回时导航栏状态突变的问题，让背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色连续过渡。
 
 ## 功能演示
 
