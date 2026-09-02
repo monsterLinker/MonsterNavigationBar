@@ -2,7 +2,7 @@
 
 一个基于 Swift/UIKit 的导航栏平滑转场组件，适用于 iOS 12 及以上系统。
 
-本项目移植自 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar)，。它解决了导航控制器在 push、pop 和交互式返回时导航栏状态突变的问题，让背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色连续过渡。
+本项目移植自 [listenzz/HBDNavigationBar](https://github.com/listenzz/HBDNavigationBar)，并根据 `monstertulin` GitHub 账号统一为 `MonsterNavigationBar` 命名。它解决了导航控制器在 push、pop 和交互式返回时导航栏状态突变的问题，让背景颜色、背景图片、透明度、阴影、标题属性和按钮颜色连续过渡。
 
 ## 功能演示
 
@@ -10,7 +10,7 @@
 
 GIF 展示的是实际运行中的 Demo 录屏，主要过程如下：
 
-1. 首页提供导航栏颜色、透明度、阴影、背景图片、黑色样式和侧滑返回开关。
+1. 首页提供导航栏颜色、透明度、阴影、背景图片、黑色样式、侧滑返回和 iOS 26 按钮样式开关。
 2. 切换颜色或样式后，导航栏背景与文字颜色立即同步更新。
 3. 点击“动态渐变”进入列表页，顶部图片随滚动移动，导航栏透明度和标题颜色随滚动进度渐变。
 4. 页面 push、pop 和模态展示都使用同一套导航栏转场协调逻辑。
@@ -27,6 +27,7 @@ GIF 展示的是实际运行中的 Demo 录屏，主要过程如下：
 | 毛玻璃背景 | 颜色背景通过 `UIVisualEffectView` 渲染，保持系统风格 |
 | 阴影控制 | 支持显示、隐藏和自定义 `shadowImage` |
 | 标题和按钮颜色 | 标题属性、导航栏 tintColor 在转场期间同步变化 |
+| iOS 26 按钮样式 | Demo 开启开关后，左右按钮使用 `UIButton.Configuration.glass()`；关闭时使用 `UIButton.Configuration.plain()`（iOS 25 及以下自动禁用） |
 | 导航栏显隐 | 只隐藏内容和背景，不移除导航栏视图，保证连续动画 |
 | 返回控制 | 可分别控制返回按钮、侧滑返回和交互式返回 |
 | 全屏返回 | 可复用 UIKit 系统侧滑 target 实现全屏返回手势 |
@@ -131,6 +132,7 @@ monsterSetNeedsUpdateNavigationBar()
 | 隐藏阴影 | 动态切换导航栏底部阴影 |
 | 隐藏导航栏 | 隐藏内容和背景，同时保持转场连续 |
 | 黑色导航栏样式 | 切换深色标题和按钮样式 |
+| iOS 26 按钮样式 | 在 iOS 26 及以上切换 Liquid Glass 按钮；低版本不可用 |
 | 图片背景 | 使用渐变图片替换颜色背景 |
 | 开启侧滑返回 | 控制系统边缘返回手势 |
 | 导航栏颜色 | 在白、黑、红、绿、蓝之间切换背景颜色 |

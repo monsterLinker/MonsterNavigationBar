@@ -1,6 +1,42 @@
 import UIKit
 import MonsterNavigationBar
 
+/// 根据开关创建 iOS 26 玻璃按钮或传统系统按钮。
+private func makeDemoBarButton(
+    title: String,
+    image: UIImage? = nil,
+    target: AnyObject,
+    action: Selector,
+    modern: Bool
+) -> UIBarButtonItem {
+    if #available(iOS 26.0, *), modern {
+        var configuration = UIButton.Configuration.glass()
+        configuration.title = title
+        configuration.image = image
+        configuration.imagePlacement = .leading
+        configuration.imagePadding = image == nil ? 0 : 4
+        let button = UIButton(configuration: configuration)
+        button.addTarget(target, action: action, for: .touchUpInside)
+        return UIBarButtonItem(customView: button)
+    }
+
+    let button: UIButton
+    if #available(iOS 15.0, *) {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.image = image
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 6)
+        button = UIButton(configuration: configuration)
+    } else {
+        button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.setImage(image, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+    }
+    button.addTarget(target, action: action, for: .touchUpInside)
+    return UIBarButtonItem(customView: button)
+}
+
 /// 主页面集中展示导航栏的各项样式和转场控制。
 final class DemoViewController: UIViewController {
     private let shadowHiddenSwitch = UISwitch()
@@ -11,6 +47,7 @@ final class DemoViewController: UIViewController {
     private let alphaComponent = UILabel()
     private let imageSwitch = UISwitch()
     private let swipeBackSwitch = UISwitch()
+    private let modernButtonsSwitch = UISwitch()
     private let statusLabel = UILabel()
 
     private let configuredBarColor: UIColor?
@@ -19,6 +56,7 @@ final class DemoViewController: UIViewController {
     private let configuredBarHidden: Bool?
     private let configuredShadowHidden: Bool?
     private let configuredBarImage: UIImage?
+    private var usesModernButtons: Bool
 
     init(
         barColor: UIColor? = nil,
@@ -26,7 +64,8 @@ final class DemoViewController: UIViewController {
         barAlpha: CGFloat? = nil,
         barHidden: Bool? = nil,
         shadowHidden: Bool? = nil,
-        barImage: UIImage? = nil
+        barImage: UIImage? = nil,
+        modernButtons: Bool = false
     ) {
         configuredBarColor = barColor
         configuredBarStyle = barStyle
@@ -34,6 +73,7 @@ final class DemoViewController: UIViewController {
         configuredBarHidden = barHidden
         configuredShadowHidden = shadowHidden
         configuredBarImage = barImage
+        usesModernButtons = modernButtons
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -44,6 +84,7 @@ final class DemoViewController: UIViewController {
         configuredBarHidden = nil
         configuredShadowHidden = nil
         configuredBarImage = nil
+        usesModernButtons = false
         super.init(coder: coder)
     }
 
@@ -71,11 +112,19 @@ final class DemoViewController: UIViewController {
 
     private func configureNavigationItem() {
         if navigationController?.viewControllers.count == 1 {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(
+            navigationItem.rightBarButtonItem = makeDemoBarButton(
                 title: "下一页",
-                style: .plain,
                 target: self,
-                action: #selector(pushToNext)
+                action: #selector(pushToNext),
+                modern: usesModernButtons
+            )
+        } else {
+            navigationItem.leftBarButtonItem = makeDemoBarButton(
+                title: "返回",
+                image: UIImage(systemName: "chevron.backward"),
+                target: self,
+                action: #selector(popCurrent),
+                modern: usesModernButtons
             )
         }
     }
@@ -115,6 +164,7 @@ final class DemoViewController: UIViewController {
         stack.addArrangedSubview(makeSwitchRow(title: "黑色导航栏样式", control: blackStyleSwitch, action: #selector(blackStyleChanged)))
         stack.addArrangedSubview(makeSwitchRow(title: "图片背景", control: imageSwitch, action: #selector(imageChanged)))
         stack.addArrangedSubview(makeSwitchRow(title: "开启侧滑返回", control: swipeBackSwitch, action: #selector(swipeBackChanged)))
+        stack.addArrangedSubview(makeSwitchRow(title: "iOS 26 按钮样式", control: modernButtonsSwitch, action: #selector(modernButtonsChanged)))
 
         let colorLabel = UILabel()
         colorLabel.text = "导航栏颜色"
@@ -169,6 +219,13 @@ final class DemoViewController: UIViewController {
         blackStyleSwitch.isOn = monsterBarStyle == .black
         imageSwitch.isOn = monsterBarImage != nil
         swipeBackSwitch.isOn = monsterSwipeBackEnabled
+        modernButtonsSwitch.isOn = usesModernButtons
+        if #available(iOS 26.0, *) {
+            modernButtonsSwitch.isEnabled = true
+        } else {
+            modernButtonsSwitch.isEnabled = false
+            modernButtonsSwitch.isOn = false
+        }
         alphaSlider.value = Float(monsterBarAlpha)
         alphaComponent.text = String(format: "%.2f", monsterBarAlpha)
         statusLabel.text = "样式：\(monsterBarStyle == .black ? "黑色" : "默认")\n" +
@@ -176,7 +233,8 @@ final class DemoViewController: UIViewController {
             "导航栏隐藏：\(monsterBarHidden ? "是" : "否")\n" +
             "阴影隐藏：\(monsterBarShadowHidden ? "是" : "否")\n" +
             "图片背景：\(monsterBarImage != nil ? "是" : "否")\n" +
-            "侧滑返回：\(monsterSwipeBackEnabled ? "开启" : "关闭")"
+            "侧滑返回：\(monsterSwipeBackEnabled ? "开启" : "关闭")\n" +
+            "iOS 26 按钮：\(usesModernButtons ? "开启" : "关闭")"
     }
 
     private func makeButton(title: String, color: UIColor, action: Selector) -> UIButton {
@@ -231,9 +289,23 @@ final class DemoViewController: UIViewController {
     @objc private func colorChanged() { applyCurrentBarConfiguration() }
     @objc private func imageChanged() { applyCurrentBarConfiguration() }
 
+    @objc private func modernButtonsChanged() {
+        guard #available(iOS 26.0, *) else {
+            modernButtonsSwitch.isOn = false
+            return
+        }
+        usesModernButtons = modernButtonsSwitch.isOn
+        configureNavigationItem()
+        refreshControls()
+    }
+
     @objc private func swipeBackChanged() {
         monsterSwipeBackEnabled = swipeBackSwitch.isOn
         refreshControls()
+    }
+
+    @objc private func popCurrent() {
+        navigationController?.popViewController(animated: true)
     }
 
     @objc private func pushToNext() {
@@ -243,25 +315,26 @@ final class DemoViewController: UIViewController {
             barAlpha: CGFloat(alphaSlider.value),
             barHidden: barHiddenSwitch.isOn,
             shadowHidden: shadowHiddenSwitch.isOn,
-            barImage: imageSwitch.isOn ? makeBarImage() : nil
+            barImage: imageSwitch.isOn ? makeBarImage() : nil,
+            modernButtons: usesModernButtons
         )
         next.monsterSwipeBackEnabled = swipeBackSwitch.isOn
         navigationController?.pushViewController(next, animated: true)
     }
 
     @objc private func pushDynamicGradient() {
-        navigationController?.pushViewController(GradientDemoViewController(), animated: true)
+        navigationController?.pushViewController(GradientDemoViewController(modernButtons: usesModernButtons), animated: true)
     }
 
     @objc private func presentGradient() {
-        let gradient = GradientDemoViewController()
+        let gradient = GradientDemoViewController(modernButtons: usesModernButtons)
         let nav = MonsterNavigationController(rootViewController: gradient)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 
     @objc private func pushStackOperations() {
-        navigationController?.pushViewController(DetailViewController(), animated: true)
+        navigationController?.pushViewController(DetailViewController(modernButtons: usesModernButtons), animated: true)
     }
 
     @objc private func dismissPresented() {
@@ -282,6 +355,18 @@ final class DemoViewController: UIViewController {
 
 /// 演示 push/pop 过程中逐项改变页面导航栏配置。
 final class DetailViewController: UIViewController {
+    private let usesModernButtons: Bool
+
+    init(modernButtons: Bool = false) {
+        usesModernButtons = modernButtons
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        usesModernButtons = false
+        super.init(coder: coder)
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -292,6 +377,13 @@ final class DetailViewController: UIViewController {
         monsterBlackBarStyle = true
         monsterBarShadowHidden = true
         monsterSplitNavigationBarTransition = true
+        navigationItem.leftBarButtonItem = makeDemoBarButton(
+            title: "返回",
+            image: UIImage(systemName: "chevron.backward"),
+            target: self,
+            action: #selector(popCurrent),
+            modern: usesModernButtons
+        )
 
         let stack = UIStackView()
         stack.axis = .vertical
@@ -327,8 +419,16 @@ final class DetailViewController: UIViewController {
         navigationController?.popToRootViewController(animated: true)
     }
 
+    @objc private func popCurrent() {
+        navigationController?.popViewController(animated: true)
+    }
+
     @objc private func redirectStack() {
-        navigationController?.redirect(to: DemoViewController(), target: self, animated: true)
+        navigationController?.redirect(
+            to: DemoViewController(modernButtons: usesModernButtons),
+            target: self,
+            animated: true
+        )
     }
 }
 
@@ -336,8 +436,19 @@ final class DetailViewController: UIViewController {
 final class GradientDemoViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let headerView = UIImageView(image: GradientDemoViewController.makeHeaderImage())
+    private let usesModernButtons: Bool
     private var gradientProgress: CGFloat = -1
     private var didSetInitialInset = false
+
+    init(modernButtons: Bool = false) {
+        usesModernButtons = modernButtons
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        usesModernButtons = false
+        super.init(coder: coder)
+    }
 
     override func loadView() {
         view = tableView
@@ -361,11 +472,20 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
         monsterBarStyle = .black
         monsterTintColor = .white
         monsterTitleTextAttributes = [.foregroundColor: UIColor.white.withAlphaComponent(0)]
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        if navigationController?.viewControllers.count ?? 0 > 1 {
+            navigationItem.leftBarButtonItem = makeDemoBarButton(
+                title: "返回",
+                image: UIImage(systemName: "chevron.backward"),
+                target: self,
+                action: #selector(popCurrent),
+                modern: usesModernButtons
+            )
+        }
+        navigationItem.rightBarButtonItem = makeDemoBarButton(
             title: "关闭",
-            style: .plain,
             target: self,
-            action: #selector(close)
+            action: #selector(close),
+            modern: usesModernButtons
         )
     }
 
@@ -409,6 +529,10 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
         }
     }
 
+    @objc private func popCurrent() {
+        navigationController?.popViewController(animated: true)
+    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int { 16 }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -422,7 +546,10 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        navigationController?.pushViewController(DemoViewController(), animated: true)
+        navigationController?.pushViewController(
+            DemoViewController(modernButtons: usesModernButtons),
+            animated: true
+        )
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
