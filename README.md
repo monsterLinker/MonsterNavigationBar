@@ -70,7 +70,7 @@ GIF 展示的是实际运行中的 Demo 录屏，主要过程如下：
 在 Xcode 中选择 `File > Add Package Dependencies...`，填入：
 
 ```text
-https://github.com/monstertulin/MonsterNavigationBar.git
+https://github.com/monsterLinker/MonsterNavigationBar.git
 ```
 
 或者在 `Package.swift` 中添加：
@@ -78,7 +78,7 @@ https://github.com/monstertulin/MonsterNavigationBar.git
 ```swift
 dependencies: [
     .package(
-        url: "https://github.com/monstertulin/MonsterNavigationBar.git",
+        url: "https://github.com/monsterLinker/MonsterNavigationBar.git",
         from: "1.0.0"
     )
 ]
