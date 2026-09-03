@@ -14,6 +14,7 @@ private var monsterSwipeBackEnabledKey: UInt8 = 0
 private var monsterClickBackEnabledKey: UInt8 = 0
 private var monsterSplitTransitionKey: UInt8 = 0
 private var monsterLiquidGlassBarButtonEnabledKey: UInt8 = 0
+private var monsterManagedBackBarButtonItemKey: UInt8 = 0
 private var monsterExtendedLayoutDidSetKey: UInt8 = 0
 private var monsterBackBarButtonItemKey: UInt8 = 0
 
@@ -134,6 +135,11 @@ public extension UIViewController {
         set { objc_setAssociatedObject(self, &monsterBackBarButtonItemKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
+    internal var monsterManagedBackBarButtonItem: UIBarButtonItem? {
+        get { objc_getAssociatedObject(self, &monsterManagedBackBarButtonItemKey) as? UIBarButtonItem }
+        set { objc_setAssociatedObject(self, &monsterManagedBackBarButtonItemKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+    }
+
     var monsterComputedBarShadowAlpha: CGFloat {
         monsterBarShadowHidden ? 0 : monsterBarAlpha
     }
@@ -171,6 +177,7 @@ public extension UIViewController {
 
     /// Applies the page-level button style to all caller-supplied navigation items.
     internal func monsterApplyLiquidGlassBarButtonStyle() {
+        #if compiler(>=6.2)
         guard #available(iOS 26.0, *) else { return }
 
         var items = navigationItem.leftBarButtonItems ?? []
@@ -179,23 +186,22 @@ public extension UIViewController {
             items.append(backItem)
         }
 
-        if #available(iOS 16.0, *) {
-            var groups = navigationItem.leadingItemGroups
-                + navigationItem.centerItemGroups
-                + navigationItem.trailingItemGroups
-            if let pinnedGroup = navigationItem.pinnedTrailingGroup {
-                groups.append(pinnedGroup)
-            }
-            for group in groups {
-                items.append(contentsOf: group.barButtonItems)
-                if let representativeItem = group.representativeItem {
-                    items.append(representativeItem)
-                }
+        var groups = navigationItem.leadingItemGroups
+            + navigationItem.centerItemGroups
+            + navigationItem.trailingItemGroups
+        if let pinnedGroup = navigationItem.pinnedTrailingGroup {
+            groups.append(pinnedGroup)
+        }
+        for group in groups {
+            items.append(contentsOf: group.barButtonItems)
+            if let representativeItem = group.representativeItem {
+                items.append(representativeItem)
             }
         }
 
         let hidesSharedBackground = !monsterLiquidGlassBarButtonEnabled
         items.forEach { $0.hidesSharedBackground = hidesSharedBackground }
+        #endif
     }
 
     var monster_computedBarShadowAlpha: CGFloat { monsterComputedBarShadowAlpha }

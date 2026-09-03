@@ -142,6 +142,21 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
         }
     }
 
+    open override func pushViewController(_ viewController: UIViewController, animated: Bool) {
+        prepareManagedBackButton(for: viewController, previousController: topViewController)
+        super.pushViewController(viewController, animated: animated)
+    }
+
+    open override func setViewControllers(_ viewControllers: [UIViewController], animated: Bool) {
+        if let rootController = viewControllers.first {
+            prepareManagedBackButton(for: rootController, previousController: nil)
+        }
+        for (previousController, currentController) in zip(viewControllers, viewControllers.dropFirst()) {
+            prepareManagedBackButton(for: currentController, previousController: previousController)
+        }
+        super.setViewControllers(viewControllers, animated: animated)
+    }
+
     open override func popViewController(animated: Bool) -> UIViewController? {
         guard canPopTopViewController else { return nil }
         if viewControllers.count > 1 { poppingViewController = topViewController }
@@ -193,6 +208,10 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
         navigationBar.barStyle = viewController.monsterBarStyle
         navigationBar.tintColor = viewController.monsterEffectiveTintColor
         navigationBar.titleTextAttributes = viewController.monsterEffectiveTitleTextAttributes
+        prepareManagedBackButton(
+            for: viewController,
+            previousController: previousViewController(before: viewController)
+        )
         viewController.monsterApplyLiquidGlassBarButtonStyle()
 
         if #available(iOS 13, *) {
@@ -320,6 +339,92 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
     /// Override this hook when a screen needs to display a confirmation before returning.
     open func shouldAllowBack(for viewController: UIViewController) -> Bool {
         viewController.monsterBackInteractive
+    }
+
+    /// Creates a configurable iOS 26 back item without replacing caller-supplied left items.
+    private func prepareManagedBackButton(
+        for viewController: UIViewController,
+        previousController: UIViewController?
+    ) {
+        #if compiler(>=6.2)
+        guard #available(iOS 26.0, *) else { return }
+
+        let navigationItem = viewController.navigationItem
+        let managedItem = viewController.monsterManagedBackBarButtonItem
+        if previousController == nil || navigationItem.hidesBackButton {
+            if navigationItem.leftBarButtonItem === managedItem {
+                navigationItem.leftBarButtonItem = nil
+            }
+            viewController.monsterManagedBackBarButtonItem = nil
+            return
+        }
+        guard let previousController else { return }
+
+        if let leftItem = navigationItem.leftBarButtonItem, leftItem !== managedItem {
+            viewController.monsterManagedBackBarButtonItem = nil
+            return
+        }
+
+        let title = managedBackButtonTitle(from: previousController)
+        let item = managedItem ?? makeManagedBackButton(title: title)
+        item.title = title
+        updateManagedBackButtonContent(item, title: title)
+        item.hidesSharedBackground = !viewController.monsterLiquidGlassBarButtonEnabled
+        navigationItem.leftBarButtonItem = item
+        viewController.monsterManagedBackBarButtonItem = item
+        #endif
+    }
+
+    /// Builds the back control as a custom view so compact navigation bars retain its title.
+    @available(iOS 15.0, *)
+    private func makeManagedBackButton(title: String?) -> UIBarButtonItem {
+        let button = UIButton(configuration: managedBackButtonConfiguration(title: title))
+        button.addTarget(self, action: #selector(handleManagedBackButton), for: .touchUpInside)
+        return UIBarButtonItem(customView: button)
+    }
+
+    /// Keeps a reused managed item in sync when its previous controller changes.
+    @available(iOS 15.0, *)
+    private func updateManagedBackButtonContent(_ item: UIBarButtonItem, title: String?) {
+        guard let button = item.customView as? UIButton else { return }
+        button.configuration = managedBackButtonConfiguration(title: title)
+        button.accessibilityLabel = title
+    }
+
+    /// Matches the standard back-button image and title spacing without adding a background.
+    @available(iOS 15.0, *)
+    private func managedBackButtonConfiguration(title: String?) -> UIButton.Configuration {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.image = UIImage(systemName: "chevron.backward")
+        configuration.imagePlacement = .leading
+        configuration.imagePadding = title == nil ? 0 : 4
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 4)
+        return configuration
+    }
+
+    /// Resolves the title UIKit would normally source from the previous navigation item.
+    private func managedBackButtonTitle(from previousController: UIViewController) -> String? {
+        let navigationItem = previousController.navigationItem
+        if #available(iOS 14.0, *), navigationItem.backButtonDisplayMode == .minimal {
+            return nil
+        }
+        return navigationItem.backBarButtonItem?.title
+            ?? navigationItem.backButtonTitle
+            ?? navigationItem.title
+            ?? previousController.title
+    }
+
+    /// Finds the controller that owns the current page's system back-button title.
+    private func previousViewController(before viewController: UIViewController) -> UIViewController? {
+        guard let index = viewControllers.firstIndex(where: { $0 === viewController }), index > 0 else {
+            return nil
+        }
+        return viewControllers[index - 1]
+    }
+
+    @objc private func handleManagedBackButton() {
+        _ = popViewController(animated: true)
     }
 
     /// Centralizes button and programmatic pop permission checks. UIKit invokes

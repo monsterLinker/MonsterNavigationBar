@@ -8,16 +8,25 @@ private func makeDemoBarButton(
     target: AnyObject,
     action: Selector
 ) -> UIBarButtonItem {
-    let item: UIBarButtonItem
     if #available(iOS 16.0, *) {
-        item = UIBarButtonItem(title: title, image: image, target: target, action: action)
-    } else if let image {
-        item = UIBarButtonItem(image: image, style: .plain, target: target, action: action)
-        item.accessibilityLabel = title
-    } else {
-        item = UIBarButtonItem(title: title, style: .plain, target: target, action: action)
+        return UIBarButtonItem(title: title, image: image, target: target, action: action)
     }
-    return item
+
+    let button: UIButton
+    if #available(iOS 15.0, *) {
+        var configuration = UIButton.Configuration.plain()
+        configuration.title = title
+        configuration.image = image
+        configuration.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 6)
+        button = UIButton(configuration: configuration)
+    } else {
+        button = UIButton(type: .system)
+        button.setTitle(title, for: .normal)
+        button.setImage(image, for: .normal)
+        button.contentEdgeInsets = UIEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+    }
+    button.addTarget(target, action: action, for: .touchUpInside)
+    return UIBarButtonItem(customView: button)
 }
 
 /// 主页面集中展示导航栏的各项样式和转场控制。
@@ -99,13 +108,6 @@ final class DemoViewController: UIViewController {
                 title: "下一页",
                 target: self,
                 action: #selector(pushToNext)
-            )
-        } else {
-            navigationItem.leftBarButtonItem = makeDemoBarButton(
-                title: "返回",
-                image: UIImage(systemName: "chevron.backward"),
-                target: self,
-                action: #selector(popCurrent)
             )
         }
         monsterLiquidGlassBarButtonEnabled = usesModernButtons
@@ -284,10 +286,6 @@ final class DemoViewController: UIViewController {
     @objc private func swipeBackChanged() {
         monsterSwipeBackEnabled = swipeBackSwitch.isOn
         refreshControls()
-    }
-
-    @objc private func popCurrent() {
-        navigationController?.popViewController(animated: true)
     }
 
     @objc private func pushToNext() {

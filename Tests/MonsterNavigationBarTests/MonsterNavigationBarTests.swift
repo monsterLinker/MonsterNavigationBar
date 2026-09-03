@@ -49,7 +49,8 @@ final class MonsterNavigationBarTests: XCTestCase {
         XCTAssertTrue(navigation.viewControllers[1] === replacement)
     }
 
-    func testLiquidGlassBarButtonStyleUpdatesExistingItems() throws {
+    #if compiler(>=6.2)
+    func testLiquidGlassBarButtonStyleUpdatesExistingItemsAndGroups() throws {
         guard #available(iOS 26.0, *) else {
             throw XCTSkip("Liquid Glass navigation buttons require iOS 26")
         }
@@ -58,19 +59,38 @@ final class MonsterNavigationBarTests: XCTestCase {
         let leftItem = UIBarButtonItem(title: "Left")
         let rightItem = UIBarButtonItem(title: "Right")
         let backItem = UIBarButtonItem(title: "Back")
+        let groupItem = UIBarButtonItem(title: "Group")
+        let representativeItem = UIBarButtonItem(title: "More")
+        let pinnedItem = UIBarButtonItem(title: "Pinned")
         controller.navigationItem.leftBarButtonItem = leftItem
         controller.navigationItem.rightBarButtonItem = rightItem
         controller.navigationItem.backBarButtonItem = backItem
+        controller.navigationItem.centerItemGroups = [
+            UIBarButtonItemGroup(
+                barButtonItems: [groupItem],
+                representativeItem: representativeItem
+            )
+        ]
+        controller.navigationItem.pinnedTrailingGroup = UIBarButtonItemGroup(
+            barButtonItems: [pinnedItem],
+            representativeItem: nil
+        )
 
         controller.monsterLiquidGlassBarButtonEnabled = false
         XCTAssertTrue(leftItem.hidesSharedBackground)
         XCTAssertTrue(rightItem.hidesSharedBackground)
         XCTAssertTrue(backItem.hidesSharedBackground)
+        XCTAssertTrue(groupItem.hidesSharedBackground)
+        XCTAssertTrue(representativeItem.hidesSharedBackground)
+        XCTAssertTrue(pinnedItem.hidesSharedBackground)
 
         controller.monsterLiquidGlassBarButtonEnabled = true
         XCTAssertFalse(leftItem.hidesSharedBackground)
         XCTAssertFalse(rightItem.hidesSharedBackground)
         XCTAssertFalse(backItem.hidesSharedBackground)
+        XCTAssertFalse(groupItem.hidesSharedBackground)
+        XCTAssertFalse(representativeItem.hidesSharedBackground)
+        XCTAssertFalse(pinnedItem.hidesSharedBackground)
     }
 
     func testNavigationControllerAppliesLiquidGlassStyleToItemsAddedLater() throws {
@@ -89,4 +109,55 @@ final class MonsterNavigationBarTests: XCTestCase {
 
         XCTAssertTrue(item.hidesSharedBackground)
     }
+
+    func testLiquidGlassStyleUpdatesVisibleSystemBackItem() throws {
+        guard #available(iOS 26.0, *) else {
+            throw XCTSkip("Liquid Glass navigation buttons require iOS 26")
+        }
+
+        let root = UIViewController()
+        root.title = "Root"
+        let detail = UIViewController()
+        detail.monsterLiquidGlassBarButtonEnabled = false
+        let navigationController = MonsterNavigationController(rootViewController: root)
+        navigationController.pushViewController(detail, animated: false)
+
+        let backItem = try XCTUnwrap(detail.navigationItem.leftBarButtonItem)
+        XCTAssertTrue(backItem === detail.monsterManagedBackBarButtonItem)
+        XCTAssertEqual(backItem.title, "Root")
+        let button = try XCTUnwrap(backItem.customView as? UIButton)
+        XCTAssertEqual(button.configuration?.title, "Root")
+        XCTAssertTrue(backItem.hidesSharedBackground)
+        XCTAssertTrue(button.allTargets.contains { ($0 as AnyObject) === navigationController })
+        XCTAssertTrue(button.actions(forTarget: navigationController, forControlEvent: .touchUpInside)?.contains("handleManagedBackButton") == true)
+
+        detail.monsterLiquidGlassBarButtonEnabled = true
+        XCTAssertFalse(backItem.hidesSharedBackground)
+
+        detail.monsterClickBackEnabled = false
+        navigationController.perform(NSSelectorFromString("handleManagedBackButton"))
+        XCTAssertTrue(navigationController.topViewController === detail)
+
+        detail.monsterClickBackEnabled = true
+        navigationController.perform(NSSelectorFromString("handleManagedBackButton"))
+        XCTAssertTrue(navigationController.topViewController === root)
+    }
+
+    func testSetViewControllersPreparesSystemBackItemStyle() throws {
+        guard #available(iOS 26.0, *) else {
+            throw XCTSkip("Liquid Glass navigation buttons require iOS 26")
+        }
+
+        let root = UIViewController()
+        let detail = UIViewController()
+        detail.monsterLiquidGlassBarButtonEnabled = false
+        let navigationController = MonsterNavigationController()
+
+        navigationController.setViewControllers([root, detail], animated: false)
+
+        let backItem = try XCTUnwrap(detail.navigationItem.leftBarButtonItem)
+        XCTAssertTrue(backItem === detail.monsterManagedBackBarButtonItem)
+        XCTAssertTrue(backItem.hidesSharedBackground)
+    }
+    #endif
 }

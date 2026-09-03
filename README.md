@@ -27,7 +27,7 @@ GIF 展示的是实际运行中的 Demo 录屏，主要过程如下：
 | 毛玻璃背景 | 颜色背景通过 `UIVisualEffectView` 渲染，保持系统风格 |
 | 阴影控制 | 支持显示、隐藏和自定义 `shadowImage` |
 | 标题和按钮颜色 | 标题属性、导航栏 tintColor 在转场期间同步变化 |
-| iOS 26 按钮样式 | 通过 `monsterLiquidGlassBarButtonEnabled` 统一切换左右按钮和自定义返回按钮的 Liquid Glass 背景（iOS 25 及以下无效果） |
+| iOS 26 按钮样式 | 通过 `monsterLiquidGlassBarButtonEnabled` 统一切换左右按钮、标准返回按钮和单项按钮组的 Liquid Glass 背景（iOS 25 及以下无效果） |
 | 导航栏显隐 | 只隐藏内容和背景，不移除导航栏视图，保证连续动画 |
 | 返回控制 | 可分别控制返回按钮、侧滑返回和交互式返回 |
 | 全屏返回 | 可复用 UIKit 系统侧滑 target 实现全屏返回手势 |
@@ -126,7 +126,9 @@ monsterLiquidGlassBarButtonEnabled = true  // 新版 Liquid Glass 胶囊背景
 monsterLiquidGlassBarButtonEnabled = false // 旧版无胶囊背景样式
 ```
 
-属性设置后会立即更新已有的 `leftBarButtonItems`、`rightBarButtonItems`、`backBarButtonItem` 和按钮组；后续导航栏刷新时也会再次应用。UIKit 自动生成且未暴露为 `UIBarButtonItem` 的返回按钮不在该接口控制范围内。
+属性设置后会立即更新已有的 `leftBarButtonItems`、`rightBarButtonItems`、`backBarButtonItem` 和单项按钮组；后续导航栏刷新时也会再次应用。页面没有自定义左侧按钮时，`MonsterNavigationController` 会在 iOS 26 上提供外观一致的标准返回按钮，使返回按钮也能跟随该属性切换；点击仍经过 `monsterClickBackEnabled` 和 `shouldAllowBack(for:)`，侧滑返回不受影响。
+
+UIKit 会忽略包含多个 item 的 `UIBarButtonItemGroup` 上的 `hidesSharedBackground`，因此多项按钮组仍使用系统统一背景。使用未包含 iOS 26 SDK 的旧版 Xcode 构建时，属性可以正常编译，但不会执行 Liquid Glass 样式切换。
 
 ## Demo 功能说明
 
