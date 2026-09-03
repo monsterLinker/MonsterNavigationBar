@@ -193,6 +193,7 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
         navigationBar.barStyle = viewController.monsterBarStyle
         navigationBar.tintColor = viewController.monsterEffectiveTintColor
         navigationBar.titleTextAttributes = viewController.monsterEffectiveTitleTextAttributes
+        viewController.monsterApplyLiquidGlassBarButtonStyle()
 
         if #available(iOS 13, *) {
             navigationBar.standardAppearance.titleTextAttributes = viewController.monsterEffectiveTitleTextAttributes
@@ -403,6 +404,7 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
         item.title = oldItem?.title ?? (navigationBar as? MonsterNavigationBar)?.backButtonLabel?.text
         item.tintColor = from.monsterEffectiveTintColor
         to.navigationItem.backBarButtonItem = item
+        to.monsterApplyLiquidGlassBarButtonStyle()
     }
 
     private func resetButtonLabels(in view: UIView) {

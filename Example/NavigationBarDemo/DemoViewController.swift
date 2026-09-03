@@ -1,40 +1,23 @@
 import UIKit
 import MonsterNavigationBar
 
-/// 根据开关创建 iOS 26 玻璃按钮或传统系统按钮。
+/// 创建由 MonsterNavigationBar 公共接口统一管理样式的导航栏按钮。
 private func makeDemoBarButton(
     title: String,
     image: UIImage? = nil,
     target: AnyObject,
-    action: Selector,
-    modern: Bool
+    action: Selector
 ) -> UIBarButtonItem {
-    if #available(iOS 26.0, *), modern {
-        var configuration = UIButton.Configuration.glass()
-        configuration.title = title
-        configuration.image = image
-        configuration.imagePlacement = .leading
-        configuration.imagePadding = image == nil ? 0 : 4
-        let button = UIButton(configuration: configuration)
-        button.addTarget(target, action: action, for: .touchUpInside)
-        return UIBarButtonItem(customView: button)
-    }
-
-    let button: UIButton
-    if #available(iOS 15.0, *) {
-        var configuration = UIButton.Configuration.plain()
-        configuration.title = title
-        configuration.image = image
-        configuration.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 6, bottom: 4, trailing: 6)
-        button = UIButton(configuration: configuration)
+    let item: UIBarButtonItem
+    if #available(iOS 16.0, *) {
+        item = UIBarButtonItem(title: title, image: image, target: target, action: action)
+    } else if let image {
+        item = UIBarButtonItem(image: image, style: .plain, target: target, action: action)
+        item.accessibilityLabel = title
     } else {
-        button = UIButton(type: .system)
-        button.setTitle(title, for: .normal)
-        button.setImage(image, for: .normal)
-        button.contentEdgeInsets = UIEdgeInsets(top: 4, left: 6, bottom: 4, right: 6)
+        item = UIBarButtonItem(title: title, style: .plain, target: target, action: action)
     }
-    button.addTarget(target, action: action, for: .touchUpInside)
-    return UIBarButtonItem(customView: button)
+    return item
 }
 
 /// 主页面集中展示导航栏的各项样式和转场控制。
@@ -115,18 +98,17 @@ final class DemoViewController: UIViewController {
             navigationItem.rightBarButtonItem = makeDemoBarButton(
                 title: "下一页",
                 target: self,
-                action: #selector(pushToNext),
-                modern: usesModernButtons
+                action: #selector(pushToNext)
             )
         } else {
             navigationItem.leftBarButtonItem = makeDemoBarButton(
                 title: "返回",
                 image: UIImage(systemName: "chevron.backward"),
                 target: self,
-                action: #selector(popCurrent),
-                modern: usesModernButtons
+                action: #selector(popCurrent)
             )
         }
+        monsterLiquidGlassBarButtonEnabled = usesModernButtons
     }
 
     private func configureContent() {
@@ -295,7 +277,7 @@ final class DemoViewController: UIViewController {
             return
         }
         usesModernButtons = modernButtonsSwitch.isOn
-        configureNavigationItem()
+        monsterLiquidGlassBarButtonEnabled = usesModernButtons
         refreshControls()
     }
 
@@ -381,9 +363,9 @@ final class DetailViewController: UIViewController {
             title: "返回",
             image: UIImage(systemName: "chevron.backward"),
             target: self,
-            action: #selector(popCurrent),
-            modern: usesModernButtons
+            action: #selector(popCurrent)
         )
+        monsterLiquidGlassBarButtonEnabled = usesModernButtons
 
         let stack = UIStackView()
         stack.axis = .vertical
@@ -477,16 +459,15 @@ final class GradientDemoViewController: UIViewController, UITableViewDataSource,
                 title: "返回",
                 image: UIImage(systemName: "chevron.backward"),
                 target: self,
-                action: #selector(popCurrent),
-                modern: usesModernButtons
+                action: #selector(popCurrent)
             )
         }
         navigationItem.rightBarButtonItem = makeDemoBarButton(
             title: "关闭",
             target: self,
-            action: #selector(close),
-            modern: usesModernButtons
+            action: #selector(close)
         )
+        monsterLiquidGlassBarButtonEnabled = usesModernButtons
     }
 
     override func viewDidLayoutSubviews() {

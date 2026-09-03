@@ -13,6 +13,7 @@ private var monsterBackInteractiveKey: UInt8 = 0
 private var monsterSwipeBackEnabledKey: UInt8 = 0
 private var monsterClickBackEnabledKey: UInt8 = 0
 private var monsterSplitTransitionKey: UInt8 = 0
+private var monsterLiquidGlassBarButtonEnabledKey: UInt8 = 0
 private var monsterExtendedLayoutDidSetKey: UInt8 = 0
 private var monsterBackBarButtonItemKey: UInt8 = 0
 
@@ -107,6 +108,21 @@ public extension UIViewController {
         set { objc_setAssociatedObject(self, &monsterSplitTransitionKey, NSNumber(value: newValue), .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
     }
 
+    /// Controls whether custom navigation bar items use the system Liquid Glass
+    /// background on iOS 26 and later. The default is `false` for legacy styling.
+    @IBInspectable var monsterLiquidGlassBarButtonEnabled: Bool {
+        get { (objc_getAssociatedObject(self, &monsterLiquidGlassBarButtonEnabledKey) as? NSNumber)?.boolValue ?? false }
+        set {
+            objc_setAssociatedObject(
+                self,
+                &monsterLiquidGlassBarButtonEnabledKey,
+                NSNumber(value: newValue),
+                .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+            )
+            monsterApplyLiquidGlassBarButtonStyle()
+        }
+    }
+
     /// Set internally when a caller deliberately opts into an opaque bar extending over content.
     var monsterExtendedLayoutDidSet: Bool {
         get { (objc_getAssociatedObject(self, &monsterExtendedLayoutDidSetKey) as? NSNumber)?.boolValue ?? false }
@@ -153,6 +169,35 @@ public extension UIViewController {
         return attributes
     }
 
+    /// Applies the page-level button style to all caller-supplied navigation items.
+    internal func monsterApplyLiquidGlassBarButtonStyle() {
+        guard #available(iOS 26.0, *) else { return }
+
+        var items = navigationItem.leftBarButtonItems ?? []
+        items.append(contentsOf: navigationItem.rightBarButtonItems ?? [])
+        if let backItem = navigationItem.backBarButtonItem {
+            items.append(backItem)
+        }
+
+        if #available(iOS 16.0, *) {
+            var groups = navigationItem.leadingItemGroups
+                + navigationItem.centerItemGroups
+                + navigationItem.trailingItemGroups
+            if let pinnedGroup = navigationItem.pinnedTrailingGroup {
+                groups.append(pinnedGroup)
+            }
+            for group in groups {
+                items.append(contentsOf: group.barButtonItems)
+                if let representativeItem = group.representativeItem {
+                    items.append(representativeItem)
+                }
+            }
+        }
+
+        let hidesSharedBackground = !monsterLiquidGlassBarButtonEnabled
+        items.forEach { $0.hidesSharedBackground = hidesSharedBackground }
+    }
+
     var monster_computedBarShadowAlpha: CGFloat { monsterComputedBarShadowAlpha }
     var monster_computedBarTintColor: UIColor? { monsterComputedBarTintColor }
     var monster_computedBarImage: UIImage? { monsterComputedBarImage }
@@ -186,6 +231,7 @@ public extension UIViewController {
     var monster_swipeBackEnabled: Bool { get { monsterSwipeBackEnabled } set { monsterSwipeBackEnabled = newValue } }
     var monster_clickBackEnabled: Bool { get { monsterClickBackEnabled } set { monsterClickBackEnabled = newValue } }
     var monster_splitNavigationBarTransition: Bool { get { monsterSplitNavigationBarTransition } set { monsterSplitNavigationBarTransition = newValue } }
+    var monster_liquidGlassBarButtonEnabled: Bool { get { monsterLiquidGlassBarButtonEnabled } set { monsterLiquidGlassBarButtonEnabled = newValue } }
     var monster_extendedLayoutDidSet: Bool { get { monsterExtendedLayoutDidSet } set { monsterExtendedLayoutDidSet = newValue } }
     var monster_backBarButtonItem: UIBarButtonItem? { get { monsterBackBarButtonItem } set { monsterBackBarButtonItem = newValue } }
 }

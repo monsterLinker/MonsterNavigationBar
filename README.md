@@ -27,7 +27,7 @@ GIF 展示的是实际运行中的 Demo 录屏，主要过程如下：
 | 毛玻璃背景 | 颜色背景通过 `UIVisualEffectView` 渲染，保持系统风格 |
 | 阴影控制 | 支持显示、隐藏和自定义 `shadowImage` |
 | 标题和按钮颜色 | 标题属性、导航栏 tintColor 在转场期间同步变化 |
-| iOS 26 按钮样式 | Demo 开启开关后，左右按钮使用 `UIButton.Configuration.glass()`；关闭时使用 `UIButton.Configuration.plain()`（iOS 25 及以下自动禁用） |
+| iOS 26 按钮样式 | 通过 `monsterLiquidGlassBarButtonEnabled` 统一切换左右按钮和自定义返回按钮的 Liquid Glass 背景（iOS 25 及以下无效果） |
 | 导航栏显隐 | 只隐藏内容和背景，不移除导航栏视图，保证连续动画 |
 | 返回控制 | 可分别控制返回按钮、侧滑返回和交互式返回 |
 | 全屏返回 | 可复用 UIKit 系统侧滑 target 实现全屏返回手势 |
@@ -110,6 +110,7 @@ final class DetailViewController: UIViewController {
 | `monsterSwipeBackEnabled` | `Bool` | `true` | 是否允许系统侧滑返回 |
 | `monsterClickBackEnabled` | `Bool` | `true` | 是否允许点击返回按钮 |
 | `monsterSplitNavigationBarTransition` | `Bool` | `false` | 强制拆分导航栏内容与背景进行转场 |
+| `monsterLiquidGlassBarButtonEnabled` | `Bool` | `false` | iOS 26 及以上是否为页面自定义导航栏按钮显示 Liquid Glass 背景 |
 
 滚动页面动态修改属性后，调用：
 
@@ -117,6 +118,15 @@ final class DetailViewController: UIViewController {
 monsterBarAlpha = progress
 monsterSetNeedsUpdateNavigationBar()
 ```
+
+在 iOS 26 及以上切换页面左右导航栏按钮的 Liquid Glass 样式：
+
+```swift
+monsterLiquidGlassBarButtonEnabled = true  // 新版 Liquid Glass 胶囊背景
+monsterLiquidGlassBarButtonEnabled = false // 旧版无胶囊背景样式
+```
+
+属性设置后会立即更新已有的 `leftBarButtonItems`、`rightBarButtonItems`、`backBarButtonItem` 和按钮组；后续导航栏刷新时也会再次应用。UIKit 自动生成且未暴露为 `UIBarButtonItem` 的返回按钮不在该接口控制范围内。
 
 ## Demo 功能说明
 
