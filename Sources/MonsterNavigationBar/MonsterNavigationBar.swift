@@ -6,6 +6,15 @@ import ObjectiveC.runtime
 open class MonsterNavigationBar: UINavigationBar {
     private weak var overlayContainerReference: UIView?
     private var storedBarTintColor: UIColor?
+    /// A plain color layer kept above UIKit's material implementation.
+    /// iOS 18 may redraw the visual-effect content after appearance changes,
+    /// so the configured tint must not rely on that private subview alone.
+    private let colorOverlayView: UIView = {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        return view
+    }()
     /// The layer used for the one-pixel shadow below the bar.
     public private(set) lazy var shadowImageView: UIImageView = {
         let view = UIImageView()
@@ -78,6 +87,7 @@ open class MonsterNavigationBar: UINavigationBar {
             ensureOverlayViews()
             fakeView.contentView.backgroundColor = newValue
             fakeView.subviews.last?.backgroundColor = newValue
+            colorOverlayView.backgroundColor = newValue
         }
     }
 
@@ -103,6 +113,7 @@ open class MonsterNavigationBar: UINavigationBar {
         ensureOverlayViews()
         let container = overlayContainer
         fakeView.frame = container.bounds
+        colorOverlayView.frame = container.bounds
         backgroundImageView.frame = container.bounds
         let hairline = MonsterNavigationBar.hairlineWidth(for: self)
         shadowImageView.frame = CGRect(
@@ -129,10 +140,15 @@ open class MonsterNavigationBar: UINavigationBar {
         monsterBackgroundView
     }
 
+    /// Internal color layer used by the navigation controller during updates.
+    var monsterColorOverlayView: UIView {
+        colorOverlayView
+    }
+
     private var overlayContainer: UIView {
         if let overlayContainerReference { return overlayContainerReference }
         return subviews.first(where: { view in
-            view !== fakeView && view !== backgroundImageView && view !== shadowImageView
+            view !== fakeView && view !== colorOverlayView && view !== backgroundImageView && view !== shadowImageView
         }) ?? self
     }
 
@@ -148,11 +164,15 @@ open class MonsterNavigationBar: UINavigationBar {
     }
 
     private func configureOverlayViews() {
-        overlayContainerReference = subviews.first
-        ensureOverlayViews()
         // Prevent UIKit from inserting its own background and shadow layers.
         super.setBackgroundImage(UIImage(), for: .default)
         super.shadowImage = UIImage()
+        // UIKit creates its private background container as part of the setters
+        // above. Attach custom layers only after that container exists; this is
+        // required on iOS 18 where the navigation bar is initialized before
+        // its background hierarchy is complete.
+        overlayContainerReference = subviews.first
+        ensureOverlayViews()
     }
 
     private func ensureOverlayViews() {
@@ -161,22 +181,30 @@ open class MonsterNavigationBar: UINavigationBar {
         }
         if overlayContainerReference == nil {
             overlayContainerReference = subviews.first(where: { view in
-                view !== fakeView && view !== backgroundImageView && view !== shadowImageView
+                view !== fakeView && view !== colorOverlayView && view !== backgroundImageView && view !== shadowImageView
             })
         }
         let container = overlayContainer
         if fakeView.superview !== container {
             fakeView.removeFromSuperview()
-            container.insertSubview(fakeView, at: 0)
+        }
+        if colorOverlayView.superview !== container {
+            colorOverlayView.removeFromSuperview()
         }
         if backgroundImageView.superview !== container {
             backgroundImageView.removeFromSuperview()
-            container.insertSubview(backgroundImageView, aboveSubview: fakeView)
         }
         if shadowImageView.superview !== container {
             shadowImageView.removeFromSuperview()
-            container.insertSubview(shadowImageView, aboveSubview: backgroundImageView)
         }
+
+        // UIKit may reorder the private material subviews during a layout pass.
+        // Reinsert all custom layers on every pass so the configured background
+        // remains above that material and below the navigation-bar content.
+        container.insertSubview(fakeView, at: 0)
+        container.insertSubview(colorOverlayView, aboveSubview: fakeView)
+        container.insertSubview(backgroundImageView, aboveSubview: colorOverlayView)
+        container.insertSubview(shadowImageView, aboveSubview: backgroundImageView)
     }
 
     open override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {

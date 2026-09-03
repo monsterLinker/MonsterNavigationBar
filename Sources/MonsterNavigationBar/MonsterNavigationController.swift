@@ -222,8 +222,11 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
         if let bar {
             bar.barTintColor = viewController.monsterComputedBarTintColor
             bar.backgroundImageView.image = viewController.monsterComputedBarImage
-            bar.fakeView.alpha = viewController.monsterComputedBarImage == nil ? viewController.monsterBarAlpha : 0
-            bar.backgroundImageView.alpha = viewController.monsterComputedBarImage == nil ? 0 : viewController.monsterBarAlpha
+            let hasImage = viewController.monsterComputedBarImage != nil
+            let backgroundAlpha = hasImage ? 0 : viewController.monsterBarAlpha
+            bar.fakeView.alpha = backgroundAlpha
+            bar.monsterColorOverlayView.alpha = backgroundAlpha
+            bar.backgroundImageView.alpha = hasImage ? viewController.monsterBarAlpha : 0
             bar.shadowImageView.alpha = viewController.monsterComputedBarShadowAlpha
             bar.monsterSetContentHidden(viewController.monsterBarHidden)
             bar.monsterBackgroundView?.layer.mask = viewController.monsterBarAlpha == 0 ? CALayer() : nil
@@ -493,6 +496,7 @@ open class MonsterNavigationController: UINavigationController, UINavigationCont
     private func hideActualBarLayers() {
         guard let bar = navigationBar as? MonsterNavigationBar else { return }
         bar.fakeView.alpha = 0
+        bar.monsterColorOverlayView.alpha = 0
         bar.backgroundImageView.alpha = 0
         bar.shadowImageView.alpha = 0
     }

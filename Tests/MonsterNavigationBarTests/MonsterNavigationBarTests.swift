@@ -34,6 +34,37 @@ final class MonsterNavigationBarTests: XCTestCase {
         XCTAssertEqual(controller.monsterComputedBarShadowAlpha, 0)
     }
 
+    func testVisibleNavigationBarAppliesConfiguredColorAndImageLayers() throws {
+        let root = UIViewController()
+        root.monsterBarTintColor = .systemRed
+        let navigationController = MonsterNavigationController(rootViewController: root)
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 640))
+        window.rootViewController = navigationController
+        window.makeKeyAndVisible()
+        navigationController.view.layoutIfNeeded()
+
+        let bar = try XCTUnwrap(navigationController.navigationBar as? MonsterNavigationBar)
+        XCTAssertEqual(bar.barTintColor, .systemRed)
+        XCTAssertEqual(bar.fakeView.contentView.backgroundColor, .systemRed)
+        XCTAssertEqual(bar.fakeView.alpha, 1, accuracy: 0.001)
+        XCTAssertNil(bar.backgroundImageView.image)
+        XCTAssertTrue(bar.fakeView.superview === bar.monsterBackgroundView)
+        let colorIndex = try XCTUnwrap(bar.monsterBackgroundView?.subviews.firstIndex { $0 === bar.monsterColorOverlayView })
+        let fakeIndex = try XCTUnwrap(bar.monsterBackgroundView?.subviews.firstIndex { $0 === bar.fakeView })
+        XCTAssertGreaterThan(colorIndex, fakeIndex)
+
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 10, height: 10)).image { context in
+            UIColor.systemBlue.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 10, height: 10))
+        }
+        root.monsterBarImage = image
+        root.monsterSetNeedsUpdateNavigationBar()
+        XCTAssertTrue(bar.backgroundImageView.image === image)
+        XCTAssertEqual(bar.backgroundImageView.alpha, 1, accuracy: 0.001)
+        XCTAssertEqual(bar.fakeView.alpha, 0, accuracy: 0.001)
+        XCTAssertTrue(bar.backgroundImageView.superview === bar.monsterBackgroundView)
+    }
+
     func testRedirectReplacesStackFromTarget() {
         let first = UIViewController()
         let second = UIViewController()
